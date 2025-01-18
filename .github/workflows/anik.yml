@@ -1,10 +1,12 @@
-name: Run Bot with Nodemon
+name: Run Bot with Nodemon (Auto-Restart)
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *" 
 
 jobs:
   run-bot:
@@ -23,4 +25,14 @@ jobs:
       run: npm install
 
     - name: Start Bot with npx and Nodemon
-      run: npx nodemon index.js
+      run: |
+        echo "Bot is running..."
+        npx nodemon index.js
+
+    - name: Restart Workflow
+      if: always()
+      run: |
+        echo "Restarting workflow..."
+        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/dispatches \
+        -d '{"ref":"main"}'
